@@ -8,7 +8,7 @@ import {
   Receipt, 
   Users, 
   Settings,
-  Menu
+  Code
 } from "lucide-react";
 
 import {
@@ -53,6 +53,11 @@ const navItems: NavItem[] = [
     title: "Settings",
     href: "/settings",
     icon: Settings,
+  },
+  {
+    title: "API Docs",
+    href: "/api-docs",
+    icon: Code,
   },
 ];
 
