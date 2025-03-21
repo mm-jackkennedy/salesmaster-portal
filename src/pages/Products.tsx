@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -21,89 +21,42 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  stock: number;
-  status: "In Stock" | "Low Stock" | "Out of Stock";
-}
-
-const mockProducts: Product[] = [
-  {
-    id: "PRD001",
-    name: "Premium Coffee Blend",
-    category: "Beverages",
-    price: 9.99,
-    stock: 42,
-    status: "In Stock",
-  },
-  {
-    id: "PRD002",
-    name: "Artisan Sandwich",
-    category: "Food",
-    price: 9.99,
-    stock: 38,
-    status: "In Stock",
-  },
-  {
-    id: "PRD003",
-    name: "Organic Smoothie",
-    category: "Beverages",
-    price: 8.99,
-    stock: 5,
-    status: "Low Stock",
-  },
-  {
-    id: "PRD004",
-    name: "Gourmet Pastry",
-    category: "Bakery",
-    price: 7.99,
-    stock: 24,
-    status: "In Stock",
-  },
-  {
-    id: "PRD005",
-    name: "Cold Brew Coffee",
-    category: "Beverages",
-    price: 6.99,
-    stock: 0,
-    status: "Out of Stock",
-  },
-  {
-    id: "PRD006",
-    name: "Fruit Salad",
-    category: "Food",
-    price: 5.99,
-    stock: 15,
-    status: "In Stock",
-  },
-  {
-    id: "PRD007",
-    name: "Fresh Bagel",
-    category: "Bakery",
-    price: 4.99,
-    stock: 3,
-    status: "Low Stock",
-  },
-  {
-    id: "PRD008",
-    name: "Vegan Wrap",
-    category: "Food",
-    price: 8.49,
-    stock: 12,
-    status: "In Stock",
-  },
-];
+import { useToast } from "@/components/ui/use-toast";
+import { getProducts, Product } from "@/services/productService";
+import { getUseApi } from "@/config/initialize-config";
 
 const ProductsPage = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const usingApi = getUseApi();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await getProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load products. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [toast]);
+
   return (
     <AdminLayout>
       <PageHeader 
         title="Products" 
-        description="Manage your product inventory"
+        description={`Manage your product inventory ${usingApi ? '(Using API)' : '(Using Mock Data)'}`}
       >
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -129,42 +82,48 @@ const ProductsPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockProducts.map((product) => (
-                <TableRow key={product.id} className="hover:bg-muted/50">
-                  <TableCell className="font-medium">{product.id}</TableCell>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        product.status === "In Stock"
-                          ? "default"
-                          : product.status === "Low Stock"
-                          ? "outline"
-                          : "destructive"
-                      }
-                    >
-                      {product.status}
-                    </Badge>
-                  </TableCell>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <p>Loading products...</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow key={product.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">{product.id}</TableCell>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>{product.stock}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          product.status === "In Stock"
+                            ? "default"
+                            : product.status === "Low Stock"
+                            ? "outline"
+                            : "destructive"
+                        }
+                      >
+                        {product.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </AdminLayout>

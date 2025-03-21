@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -21,98 +21,42 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
-interface Order {
-  id: string;
-  customer: string;
-  date: Date;
-  items: number;
-  total: number;
-  status: "Completed" | "Processing" | "Cancelled";
-  paymentMethod: string;
-}
-
-const mockOrders: Order[] = [
-  {
-    id: "ORD-001",
-    customer: "Alex Johnson",
-    date: new Date("2023-08-15T14:24:00"),
-    items: 3,
-    total: 149.99,
-    status: "Completed",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-002",
-    customer: "Sarah Williams",
-    date: new Date("2023-08-15T12:54:00"),
-    items: 2,
-    total: 89.95,
-    status: "Completed",
-    paymentMethod: "Cash",
-  },
-  {
-    id: "ORD-003",
-    customer: "Michael Brown",
-    date: new Date("2023-08-15T10:15:00"),
-    items: 5,
-    total: 249.50,
-    status: "Processing",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-004",
-    customer: "Emma Davis",
-    date: new Date("2023-08-14T16:42:00"),
-    items: 1,
-    total: 59.99,
-    status: "Completed",
-    paymentMethod: "Mobile Payment",
-  },
-  {
-    id: "ORD-005",
-    customer: "James Wilson",
-    date: new Date("2023-08-14T09:30:00"),
-    items: 4,
-    total: 129.99,
-    status: "Cancelled",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-006",
-    customer: "Olivia Garcia",
-    date: new Date("2023-08-13T15:20:00"),
-    items: 2,
-    total: 79.98,
-    status: "Completed",
-    paymentMethod: "Cash",
-  },
-  {
-    id: "ORD-007",
-    customer: "William Martinez",
-    date: new Date("2023-08-13T11:45:00"),
-    items: 3,
-    total: 119.97,
-    status: "Processing",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "ORD-008",
-    customer: "Sophia Rodriguez",
-    date: new Date("2023-08-12T14:10:00"),
-    items: 1,
-    total: 49.99,
-    status: "Completed",
-    paymentMethod: "Mobile Payment",
-  },
-];
+import { useToast } from "@/components/ui/use-toast";
+import { getOrders, Order } from "@/services/orderService";
+import { getUseApi } from "@/config/initialize-config";
 
 const OrdersPage = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const usingApi = getUseApi();
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const data = await getOrders();
+        setOrders(data);
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load orders. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [toast]);
+
   return (
     <AdminLayout>
       <PageHeader 
         title="Orders" 
-        description="View and manage all transactions"
+        description={`View and manage all transactions ${usingApi ? '(Using API)' : '(Using Mock Data)'}`}
       >
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -138,46 +82,52 @@ const OrdersPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockOrders.map((order) => (
-                <TableRow key={order.id} className="hover:bg-muted/50">
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.customer}</TableCell>
-                  <TableCell>
-                    {order.date.toLocaleDateString()} {order.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </TableCell>
-                  <TableCell>{order.items}</TableCell>
-                  <TableCell>${order.total.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        order.status === "Completed"
-                          ? "default"
-                          : order.status === "Processing"
-                          ? "outline"
-                          : "destructive"
-                      }
-                    >
-                      {order.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{order.paymentMethod}</TableCell>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <p>Loading orders...</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {orders.map((order) => (
+                  <TableRow key={order.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell>{order.customer}</TableCell>
+                    <TableCell>
+                      {order.date.toLocaleDateString()} {order.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </TableCell>
+                    <TableCell>{order.items}</TableCell>
+                    <TableCell>${order.total.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          order.status === "Completed"
+                            ? "default"
+                            : order.status === "Processing"
+                            ? "outline"
+                            : "destructive"
+                        }
+                      >
+                        {order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{order.paymentMethod}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </AdminLayout>
