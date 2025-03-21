@@ -16,6 +16,9 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
@@ -65,28 +68,24 @@ export function SidebarNav() {
           </div>
           <span className="font-semibold text-xl">Admin</span>
         </Link>
-        <SidebarTrigger asChild>
-          <button className="p-2 rounded-md hover:bg-muted">
-            <Menu className="h-5 w-5" />
-          </button>
-        </SidebarTrigger>
+        <SidebarTrigger />
       </SidebarHeader>
       <SidebarContent className="px-3 py-4">
-        <nav className="space-y-1">
+        <SidebarMenu>
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                "nav-link",
-                location.pathname === item.href && "active"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span>{item.title}</span>
-            </Link>
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={location.pathname === item.href}
+              >
+                <Link to={item.href} className="flex items-center gap-2">
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           ))}
-        </nav>
+        </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t">
         <div className="flex items-center gap-3">
