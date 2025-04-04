@@ -37,8 +37,8 @@ export const fetchAppConfig = async (configUrl?: string): Promise<AppConfig> => 
         ...DEFAULT_CONFIG,
         ...fetchedConfig,
         // Ensure these always exist for backward compatibility
-        useApi: fetchedConfig.useApi ?? localStorage.getItem('use_api') === 'true',
-        apiBaseUrl: fetchedConfig.apiBaseUrl ?? localStorage.getItem('api_base_url') || DEFAULT_CONFIG.apiBaseUrl
+        useApi: fetchedConfig.useApi ?? (localStorage.getItem('use_api') === 'true'),
+        apiBaseUrl: fetchedConfig.apiBaseUrl ?? (localStorage.getItem('api_base_url') || DEFAULT_CONFIG.apiBaseUrl)
       };
       
       // Update localStorage for backward compatibility
