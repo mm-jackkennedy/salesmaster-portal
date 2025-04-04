@@ -1,28 +1,29 @@
 
 /**
- * This utility initializes the API configuration from localStorage
+ * This utility initializes the API configuration from JSON Config API
  * It should be imported and run at application startup
  */
 
-import { USE_API, API_BASE_URL } from './api-config';
+import { fetchAppConfig, getConfig } from "@/services/configService";
 
-export const initializeApiConfig = () => {
-  // Check localStorage for configuration
-  const useApi = localStorage.getItem('use_api');
-  const apiBaseUrl = localStorage.getItem('api_base_url');
+export const initializeApiConfig = async (configUrl?: string): Promise<void> => {
+  // Fetch configuration from endpoint or use localStorage
+  await fetchAppConfig(configUrl);
   
-  // Apply to the global scope (not ideal but works for demonstration)
-  if (useApi !== null) {
-    (window as any).USE_API = useApi === 'true';
-  }
+  const config = getConfig();
   
-  if (apiBaseUrl) {
-    (window as any).API_BASE_URL = apiBaseUrl;
-  }
+  // Apply to the global scope (not ideal but works for demonstration and backwards compatibility)
+  (window as any).USE_API = config.useApi;
+  (window as any).API_BASE_URL = config.apiBaseUrl;
   
   console.log('API Config initialized:', {
-    useApi: (window as any).USE_API || USE_API,
-    apiBaseUrl: (window as any).API_BASE_URL || API_BASE_URL
+    useApi: config.useApi,
+    apiBaseUrl: config.apiBaseUrl,
+    provider: {
+      auth: config.authProvider,
+      ai: config.aiProvider,
+      commerce: config.commerceProvider
+    }
   });
 };
 
@@ -30,9 +31,9 @@ export const initializeApiConfig = () => {
 export const getUseApi = (): boolean => {
   return typeof (window as any).USE_API !== 'undefined' 
     ? (window as any).USE_API 
-    : USE_API;
+    : false;
 };
 
 export const getApiBaseUrl = (): string => {
-  return (window as any).API_BASE_URL || API_BASE_URL;
+  return (window as any).API_BASE_URL || 'http://localhost:3000/api';
 };
