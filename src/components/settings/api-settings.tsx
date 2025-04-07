@@ -1,26 +1,22 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import { getConfig, updateConfig } from "@/services/configService";
+import { AppConfig } from "@/types/config";
 
 // Note: We're not actually modifying the config file directly
 // This component simulates toggling the API mode by using localStorage
 export function ApiSettings() {
-  const [useApi, setUseApi] = useState(() => {
-    return localStorage.getItem('use_api') === 'true';
-  });
-  
-  const [apiUrl, setApiUrl] = useState(() => {
-    return localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
-  });
+  const [config, setConfig] = useState<AppConfig>(getConfig());
 
   const handleToggleApi = (checked: boolean) => {
-    setUseApi(checked);
-    localStorage.setItem('use_api', checked.toString());
+    const updatedConfig = updateConfig({ useApi: checked });
+    setConfig(updatedConfig);
     
     toast({
       title: checked ? "API Mode Enabled" : "Mock Data Mode Enabled",
@@ -31,24 +27,37 @@ export function ApiSettings() {
   };
 
   const handleSaveBaseUrl = () => {
-    localStorage.setItem('api_base_url', apiUrl);
+    const updatedConfig = updateConfig({ apiBaseUrl: config.apiBaseUrl });
+    setConfig(updatedConfig);
     
     toast({
       title: "API URL Updated",
-      description: `Base URL set to: ${apiUrl}`,
+      description: `Base URL set to: ${config.apiBaseUrl}`,
     });
   };
 
   const handleReset = () => {
     localStorage.removeItem('use_api');
     localStorage.removeItem('api_base_url');
-    setUseApi(false);
-    setApiUrl('http://localhost:3000/api');
+    
+    // This will revert to default config values
+    window.location.reload();
     
     toast({
       title: "Settings Reset",
       description: "API settings have been reset to defaults",
     });
+  };
+
+  const handleThemeChange = (property: keyof typeof config.theme, value: string) => {
+    const updatedConfig = updateConfig({
+      theme: {
+        ...config.theme,
+        [property]: value
+      }
+    });
+    
+    setConfig(updatedConfig);
   };
 
   return (
@@ -69,7 +78,7 @@ export function ApiSettings() {
           </div>
           <Switch 
             id="use-api" 
-            checked={useApi} 
+            checked={config.useApi} 
             onCheckedChange={handleToggleApi} 
           />
         </div>
@@ -79,8 +88,8 @@ export function ApiSettings() {
           <div className="flex gap-2">
             <Input 
               id="api-url"
-              value={apiUrl}
-              onChange={(e) => setApiUrl(e.target.value)}
+              value={config.apiBaseUrl}
+              onChange={(e) => setConfig({...config, apiBaseUrl: e.target.value})}
               placeholder="http://localhost:3000/api"
               className="flex-1"
             />
@@ -91,11 +100,38 @@ export function ApiSettings() {
           </p>
         </div>
 
+        <div className="pt-4 border-t">
+          <h3 className="text-lg font-medium mb-3">Theme Settings</h3>
+          <div className="space-y-3">
+            {Object.entries(config.theme).map(([key, value]) => (
+              <div key={key} className="grid grid-cols-3 items-center gap-4">
+                <Label htmlFor={`theme-${key}`} className="col-span-1">
+                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </Label>
+                <div className="col-span-2 flex items-center gap-2">
+                  <Input 
+                    id={`theme-${key}`}
+                    type="color" 
+                    value={value}
+                    onChange={(e) => handleThemeChange(key as keyof typeof config.theme, e.target.value)}
+                    className="w-10 h-10 p-1"
+                  />
+                  <Input 
+                    value={value}
+                    onChange={(e) => handleThemeChange(key as keyof typeof config.theme, e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="pt-4">
           <p className="text-sm font-medium mb-2">Current Status:</p>
           <div className="text-sm rounded-md bg-muted p-4">
-            <p><strong>Mode:</strong> {useApi ? 'API' : 'Mock Data'}</p>
-            <p><strong>API URL:</strong> {apiUrl}</p>
+            <p><strong>Mode:</strong> {config.useApi ? 'API' : 'Mock Data'}</p>
+            <p><strong>API URL:</strong> {config.apiBaseUrl}</p>
             <p className="text-xs text-muted-foreground mt-2">
               Note: Changes to these settings require a page refresh to take effect
             </p>

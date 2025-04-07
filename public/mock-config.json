@@ -1,0 +1,12 @@
+
+{
+  "theme": {
+    "primaryColor": "hsl(262 80% 50%)",
+    "secondaryColor": "hsl(260 50% 90%)",
+    "accentColor": "hsl(280 80% 60%)",
+    "backgroundColor": "hsl(260 10% 98%)",
+    "textColor": "hsl(262 80% 15%)"
+  },
+  "useApi": true,
+  "apiBaseUrl": "http://localhost:3000/api"
+}
