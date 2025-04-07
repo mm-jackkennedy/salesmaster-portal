@@ -5,19 +5,19 @@
  */
 
 import { USE_API, API_BASE_URL } from './api-config';
-import { fetchAppConfig, getUseApi, getApiBaseUrl } from '@/services/configService';
+import { fetchAppConfig, getUseApi as getConfigUseApi, getApiBaseUrl as getConfigApiBaseUrl } from '@/services/configService';
 
 export const initializeApiConfig = async () => {
   // Fetch configuration and apply it
   await fetchAppConfig('/api/config');
   
   // Apply to the global scope (not ideal but works for demonstration)
-  (window as any).USE_API = getUseApi();
-  (window as any).API_BASE_URL = getApiBaseUrl();
+  (window as any).USE_API = getConfigUseApi();
+  (window as any).API_BASE_URL = getConfigApiBaseUrl();
   
   console.log('API Config initialized:', {
-    useApi: getUseApi(),
-    apiBaseUrl: getApiBaseUrl()
+    useApi: getConfigUseApi(),
+    apiBaseUrl: getConfigApiBaseUrl()
   });
 };
 
